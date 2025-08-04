@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Bàn cược Blackjack - Nhiều chip</title>
+  <style>
+    body {
+      background-color: #0b3d0b;
+      font-family: 'Segoe UI', sans-serif;
+      color: white;
+      margin: 0;
+      padding: 0;
+    }
+
+    h2 {
+      text-align: center;
+      padding-top: 20px;
+    }
+
+    .table-container {
+      max-width: 800px;
+      margin: 20px auto;
+      background: radial-gradient(circle at center, #126c12 0%, #0a3a0a 80%);
+      border: 10px solid #2b2b2b;
+      border-radius: 50% / 10%;
+      padding: 40px 20px;
+      box-shadow: 0 0 30px #000;
+      text-align: center;
+      position: relative;
+    }
+
+    .chip-select {
+      margin: 10px auto;
+    }
+
+    .chip-select img {
+      height: 60px;
+      margin: 5px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .chip-select img:hover {
+      transform: scale(1.1);
+    }
+
+    .bet-circle {
+      width: 140px;
+      height: 140px;
+      margin: 20px auto;
+      border: 3px dashed #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      background-color: rgba(255, 255, 255, 0.08);
+      position: relative;
+    }
+
+    .bet-circle img {
+      height: 50px;
+      margin: 2px;
+    }
+
+    .buttons {
+      margin: 20px;
+    }
+
+    .buttons button {
+      padding: 10px 20px;
+      margin: 5px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .win { color: lightgreen; }
+    .lose { color: tomato; }
+
+    table {
+      width: 90%;
+      margin: 30px auto;
+      background-color: white;
+      color: black;
+      border-collapse: collapse;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #eee;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>BÀN CƯỢC BLACKJACK</h2>
+
+  <div class="table-container">
+    <div class="chip-select" id="chipSelect">
+      <img src="https://i.imgur.com/kBbxu8X.png" data-value="10" alt="10">
+      <img src="https://i.imgur.com/fDbDdHG.png" data-value="20" alt="20">
+      <img src="https://i.imgur.com/RYTZF4a.png" data-value="40" alt="40">
+      <img src="https://i.imgur.com/tpA4xFf.png" data-value="100" alt="100">
+      <img src="https://i.imgur.com/zTuX3po.png" data-value="200" alt="200">
+      <img src="https://i.imgur.com/D9UyKkz.png" data-value="500" alt="500">
+    </div>
+
+    <div class="bet-circle" id="betCircle">
+      <!-- Nơi chip sẽ hiển thị -->
+    </div>
+
+    <div class="buttons">
+      <button onclick="addResult('win')">🎉 Thắng</button>
+      <button onclick="addResult('lose')">💀 Thua</button>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Chip</th>
+        <th>Tổng cược (u)</th>
+        <th>Kết quả</th>
+        <th>Lũy kế</th>
+      </tr>
+    </thead>
+    <tbody id="historyTable">
+    </tbody>
+  </table>
+
+  <script>
+    let placedChips = []; // Danh sách các chip đang đặt
+    let balance = 0;
+    let history = [];
+
+    const chipImages = {
+      10: "https://i.imgur.com/kBbxu8X.png",
+      20: "https://i.imgur.com/fDbDdHG.png",
+      40: "https://i.imgur.com/RYTZF4a.png",
+      100: "https://i.imgur.com/tpA4xFf.png",
+      200: "https://i.imgur.com/zTuX3po.png",
+      500: "https://i.imgur.com/D9UyKkz.png"
+    };
+
+    // Nhấn vào chip → thêm vào vòng cược
+    document.querySelectorAll("#chipSelect img").forEach(img => {
+      img.addEventListener("click", () => {
+        const value = parseInt(img.dataset.value);
+        placedChips.push(value);
+        updateBetCircle();
+      });
+    });
+
+    // Cập nhật hình ảnh chip trong vòng cược
+    function updateBetCircle() {
+      const circle = document.getElementById("betCircle");
+      circle.innerHTML = "";
+      placedChips.forEach(val => {
+        const img = document.createElement("img");
+        img.src = chipImages[val];
+        img.alt = `Chip ${val}`;
+        circle.appendChild(img);
+      });
+    }
+
+    // Ghi kết quả
+    function addResult(result) {
+      if (placedChips.length === 0) {
+        alert("Bạn chưa đặt chip nào.");
+        return;
+      }
+
+      const totalBet = placedChips.reduce((a, b) => a + b, 0);
+      const outcomeText = result === 'win'
+        ? '<span class="win">Thắng</span>'
+        : '<span class="lose">Thua</span>';
+
+      balance += result === 'win' ? totalBet : -totalBet;
+
+      const table = document.getElementById("historyTable");
+      const row = table.insertRow();
+
+      // Ghép ảnh chip lại thành chuỗi HTML
+      let chipHTML = placedChips.map(val =>
+        `<img src="${chipImages[val]}" alt="Chip ${val}" style="height:30px;">`
+      ).join(" ");
+
+      row.innerHTML = `
+        <td>${history.length + 1}</td>
+        <td>${chipHTML}</td>
+        <td>${totalBet}</td>
+        <td>${outcomeText}</td>
+        <td>${balance}</td>
+      `;
+
+      history.push({ placedChips: [...placedChips], totalBet, result, balance });
+
+      // Reset chip sau ván
+      placedChips = [];
+      updateBetCircle();
+    }
+  </script>
+
+</body>
+</html>
